@@ -13,13 +13,17 @@
 RTC_DS1307 rtc;       //выбор DS
 
 
-byte pin_relay_1 = 4; //пин для управление реле1 (выход)
-byte pin_relay_2 = 5; //пин для управление реле2 (выход)
-byte pin_relay_3 = 8; //пин для управление реле3 (выход)
-byte pin_relay_4 = 9; //пин для управление реле4 (выход)
-byte pin_220v = A0; //пин для подключения оптопары (вход ADC)
-byte pin_PIR = A1;    //пин для подключаения PIR (вход)
+byte pin_relay_1 = 9; //пин для управление реле1 (выход)
+byte pin_relay_2 = 8; //пин для управление реле2 (выход)
+byte pin_relay_3 = 7; //пин для управление реле3 (выход)
+byte pin_relay_4 = 6; //пин для управление реле4 (выход)
+byte pin_220v = 5; //пин для подключения оптопары (вход ADC)
+byte pin_PIR = 11;    //пин для подключаения PIR (вход)
 byte pin_button = 10; //пин для подключения кнопки без фиксации
+byte pin_mode_1 = A0; //режим 1 - умный режим, включение по датчику движения и только при выключенном основном
+byte pin_mode_2 = 13; //режим 2 - просто включить все, без датчиков
+byte pin_mode_3 = 12; //режим 3 - просто выключить все
+
 int pirState = LOW;
 int val_PIR = 0;
 int flag = 0;
@@ -83,13 +87,17 @@ void setup() {
         pinMode(pin_220v, INPUT);
         pinMode(pin_PIR, INPUT);
         pinMode(pin_button, INPUT);
+        pinMode(pin_mode_1, OUTPUT);
+        pinMode(pin_mode_2, OUTPUT);
+        pinMode(pin_mode_3, OUTPUT);
         pinMode(13, OUTPUT);
 
 }
 
 void loop() {
         DateTime now = rtc.now();
-        if (button_state == 0) {     //основной, "умный режим, включение по датчику движения и только при выключенном основном в"
+        if (button_state == 0) {     //основной, "умный режим, включение по датчику движения и только при выключенном основном"
+                digitalWrite(pin_mode_1, LOW);
                 if (digitalRead(pin_PIR) == HIGH && digitalRead(pin_220v) == LOW) {
                         Serial.println("Motion, svet");
                         if (now.hour() > 5 && now.hour() < 19) {
@@ -115,11 +123,13 @@ void loop() {
         }
 
         if (button_state == 1) {  // режим "просто включить все, без датчиков"
+                digitalWrite(pin_mode_2, LOW);
                 lighting_enable();
                 Serial.println("Vse +");
         }
 
         if (button_state == 2) {  // режим "просто выключить все"
+                digitalWrite(pin_mode_3, LOW);
                 lighting_disable();
                 Serial.println("Vse -");
         }
