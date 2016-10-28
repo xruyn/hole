@@ -47,7 +47,7 @@ byte Digit[] = {0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07, 0x7f, 0x67};
 
 
 void setup() {
-        //Serial.begin(9600);
+        Serial.begin(9600);
         Wire.begin();
         rtc.begin();
         pinMode(pin_relay_1, OUTPUT);
@@ -61,12 +61,15 @@ void setup() {
         pinMode(pin_CLK, OUTPUT);
         pinMode(pin_nCLR, OUTPUT);
         pinMode(13, OUTPUT);
+        analogReference(DEFAULT);
+        pinMode(A7, INPUT);
 
         digitalWrite(pin_nCLR, HIGH);
         for (int p = 9; p >= 0; p--) {
                 digitOut(Digit[p]);
                 delay(100);
         }
+        digitalWrite(pin_nCLR, LOW);
 
 
 
@@ -74,12 +77,22 @@ void setup() {
 
 void loop() {
         DateTime now = rtc.now();
-
+        float analogValue = analogRead(A7); // читаем значение на аналоговом входе
+        Serial.println(1*analogValue*0.00447); // выводим его в последовательный порт
+        Serial.println(analogRead(14)/1023);
+        digitalWrite(pin_nCLR, HIGH);
+        digit_mode(4);
+        //delay(1000);
+        if ((analogValue*0.00447) < 4){
+          digitalWrite(pin_nCLR, LOW);
+          digitalWrite(pin_nCLR, HIGH);
+          digit_mode(0);
+        };
 
 
 
         if (button_state == 0) {     //основной, "умный режим, включение по датчику движения и только при выключенном основном"
-                digit_mode(1);
+                //digit_mode(1);
                 if (digitalRead(pin_PIR) == HIGH && digitalRead(pin_220v) == LOW) {
                         Serial.println("Motion, svet");
                         if (now.hour() > 5 && now.hour() < 19) {
@@ -105,13 +118,13 @@ void loop() {
         }
 
         if (button_state == 1) {  // режим "просто включить все, без датчиков"
-                digit_mode(2);
+                //digit_mode(2);
                 lighting_enable();
                 Serial.println("Vse +");
         }
 
         if (button_state == 2) {  // режим "просто выключить все"
-                digit_mode(3);
+                //digit_mode(3);
                 lighting_disable();
                 Serial.println("Vse -");
         }
