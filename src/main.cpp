@@ -69,7 +69,7 @@ void setup() {
                 digitOut(Digit[p]);
                 delay(100);
         }
-        digitalWrite(pin_nCLR, LOW);
+
 
 
 
@@ -83,10 +83,11 @@ void loop() {
         digitalWrite(pin_nCLR, HIGH);
         digit_mode(4);
         //delay(1000);
-        if ((analogValue*0.00447) < 4){
+        if (1*analogValue*0.00447 < 4.0){
           digitalWrite(pin_nCLR, LOW);
-          digitalWrite(pin_nCLR, HIGH);
+digitalWrite(pin_nCLR, HIGH);
           digit_mode(0);
+          delay(2000);
         };
 
 
