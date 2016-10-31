@@ -69,10 +69,6 @@ void setup() {
         pinMode(13, OUTPUT);
         analogReference(DEFAULT);
         pinMode(pin_ADC, INPUT);
-
-
-
-
         digitalWrite(pin_nCLR, HIGH);
         for (int p = 9; p >= 0; p--) {
                 digitOut(Digit[p]);
@@ -214,8 +210,12 @@ void digit_mode(int digit){
 }
 
 void low_battery(){
-      float v_bat = analogRead(pin_ADC); // читаем значение на аналоговом входе
-      if (v_bat*scale < 2.7) {
+  static boolean output = HIGH;
 
-      }
+  digitalWrite(13, output);
+  output = !output;
+      // float v_bat = analogRead(pin_ADC); // читаем значение на аналоговом входе
+      // if (v_bat*scale < 2.7) {
+      //
+      // }
 }
