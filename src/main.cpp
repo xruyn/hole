@@ -13,6 +13,7 @@
 #include <Arduino.h>
 #include <RTClib.h>
 #include <Wire.h>
+#include <MsTimer2.h>
 RTC_DS1307 rtc;       //выбор DS
 void lighting_enable();
 void lighting_disable();
@@ -21,6 +22,7 @@ void pit_test();
 void pulsout(byte x, int y);
 void digitOut(byte j);
 void digit_mode(int digit);
+void low_battery();
 
 
 #define pin_relay_1 9 //пин для управление реле1 (выход)
@@ -33,12 +35,14 @@ void digit_mode(int digit);
 #define pin_data 12 //data HC164
 #define pin_CLK A1 //CLK HC164
 #define pin_nCLR A0 //nCLR HC164
+#define pin_ADC A7 // вход АЦП для измерения напряжения батарейки DS1307
 
 int pirState = LOW;
 int val_PIR = 0;
 int flag = 0;
 int val = 0;
 int button_state = 0;
+float scale = 0.00447; // реальное напряжение Vcc/1023
 float delta;
 float time1;
 byte Digit[] = {0x3f, 0x06, 0x5b, 0x4f, 0x66, 0x6d, 0x7d, 0x07, 0x7f, 0x67};
@@ -50,6 +54,8 @@ void setup() {
         Serial.begin(9600);
         Wire.begin();
         rtc.begin();
+        MsTimer2::set(7000, low_battery); // 7s период
+        MsTimer2::start();
         pinMode(pin_relay_1, OUTPUT);
         pinMode(pin_relay_2, OUTPUT);
         pinMode(pin_relay_3, OUTPUT);
@@ -62,33 +68,23 @@ void setup() {
         pinMode(pin_nCLR, OUTPUT);
         pinMode(13, OUTPUT);
         analogReference(DEFAULT);
-        pinMode(A7, INPUT);
+        pinMode(pin_ADC, INPUT);
+
+
+
 
         digitalWrite(pin_nCLR, HIGH);
         for (int p = 9; p >= 0; p--) {
                 digitOut(Digit[p]);
-                delay(100);
+                delay(50);
         }
-
-
-
-
 }
 
+
 void loop() {
+        //digitalWrite(pin_nCLR, HIGH);
         DateTime now = rtc.now();
-        float analogValue = analogRead(A7); // читаем значение на аналоговом входе
-        Serial.println(1*analogValue*0.00447); // выводим его в последовательный порт
-        Serial.println(analogRead(14)/1023);
-        digitalWrite(pin_nCLR, HIGH);
-        digit_mode(4);
-        //delay(1000);
-        if (1*analogValue*0.00447 < 4.0){
-          digitalWrite(pin_nCLR, LOW);
-digitalWrite(pin_nCLR, HIGH);
-          digit_mode(0);
-          delay(2000);
-        };
+
 
 
 
@@ -101,9 +97,16 @@ digitalWrite(pin_nCLR, HIGH);
                                 Serial.println(now.hour());
                                 Serial.println("Svet vse");
                         }
-                        else { lighting_middle(); Serial.println("Gorit sredni"); }
+                        else {
+                                lighting_enable();
+                                lighting_middle();
+                                Serial.println("Gorit sredni");
+                        }
                 }
-                else { lighting_disable(); Serial.println("Bez podsvetki"); }
+                else {
+                        lighting_disable();
+                        Serial.println("Bez podsvetki");
+                }
         }
 
         if(digitalRead(pin_button) == HIGH && flag == 0) {
@@ -206,6 +209,13 @@ void pulsout(byte x, int y)   { // функция CLK для HC164
 void digit_mode(int digit){
         for (int p = digit; p <= digit; p++) {
                 digitOut(Digit[p]);
-                delay(10);
+                delay(30);
         }
+}
+
+void low_battery(){
+      float v_bat = analogRead(pin_ADC); // читаем значение на аналоговом входе
+      if (v_bat*scale < 2.7) {
+
+      }
 }
